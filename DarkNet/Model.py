@@ -42,10 +42,12 @@ class ConvS2(nn.Module):
                                 padding = 1,
                                 bias = True)
         self.bn = nn.BatchNorm2d(num_features = out_channels)
+        self.relu = nn.LeakyReLU(True)
         
     def forward(self,x):
         x = self.conv(x)
         x = self.bn(x)
+        x = self.relu(x)
         return x
 
         
@@ -60,22 +62,17 @@ class DarkModel(nn.Module):
                                 stride = 1,
                                 padding = 1,
                                 bias = True)
-        self.bn0 = nn.BatchNorm2d(num_features = 32)
+        self.bn = nn.BatchNorm2d(num_features = 32)
         self.conv1 = ConvBlock(in_channels = 32 , out_channels =64)
-        self.bn1 = nn.BatchNorm2d(num_features = 64)
-        self.ResBlock1 = ResBlock(in_channels = 64)
+        self.ResBlock1 = self.make_layer(ResBlock(in_channels = 64), 1)
         self.conv2 = ConvBlock(in_channels = 64 , out_channels = 128)  
-        self.ResBlock2 = ResBlock(in_channels = 128)
-        self.bn2 = nn.BatchNorm2d(num_features = 128)
+        self.ResBlock2 = self.make_layer(ResBlock(in_channels = 128), 2)
         self.conv3 = ConvBlock(in_channels = 128 , out_channels = 256)
-        self.ResBlock3 = ResBlock(in_channels = 256)
-        self.bn3 = nn.BatchNorm2d(num_features = 256)
+        self.ResBlock3 = self.make_layer(ResBlock(in_channels = 256), 8)
         self.conv4 = ConvBlock(in_channels = 256 , out_channels  =512)
-        self.ResBlock4 = ResBlock(in_channels = 512)
-        self.bn4 = nn.BatchNorm2d(num_features = 512)
+        self.ResBlock4 =self.make_layer(ResBlock(in_channels = 512), 8)
         self.conv5 = ConvBlock(in_channels = 512 , out_channels = 1024)
-        self.ResBlock5 = ResBlock(in_channels = 1024)
-        self.bn5 = nn.BatchNorm2d(num_features = 1024)
+        self.ResBlock5 = self.make_layer(ResBlock(in_channels = 1024), 4)
         self.relu = nn.LeakyReLU(True)
         self.GAP = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(1024, self.num_class)
@@ -84,38 +81,31 @@ class DarkModel(nn.Module):
 
     def forward(self,x):
         x = self.conv0(x)
-        x = self.bn0(x)
+        x = self.bn(x)
         x = self.relu(x)
         x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        for i in range(1):
-            x = self.ResBlock1(x)
+        x = self.ResBlock1(x)
         x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.relu(x)
-        for i in range(2):
-            x = self.ResBlock2(x)
+        x = self.ResBlock2(x)
         x = self.conv3(x)
-        x = self.bn3(x)
-        x = self.relu(x)
-        for i in range(8):
-            x = self.ResBlock3(x)
+        x = self.ResBlock3(x)
         x = self.conv4(x)
-        x = self.bn4(x)
-        x = self.relu(x)
-        for i in range(8):
-            x = self.ResBlock4(x)
+        x = self.ResBlock4(x)
         x = self.conv5(x)
-        x = self.bn5(x)
-        x = self.relu(x)
-        for i in range(4):
-            x = self.ResBlock5(x)
+        x = self.ResBlock5(x)
         x = self.GAP(x)
         x = x.squeeze()
         x = self.fc(x)
         return x         
 
+    
+    
+    def make_layer(self,block,repeat):
+        layers = []
+        for i in range(repeat):
+            layers.append(block)
+        return nn.Sequential(*layers)
+    
 
 def DarkNet53(num_class):
     return DarkModel(num_class , ResidualBlock , ConvS2) 
