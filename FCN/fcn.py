@@ -1,25 +1,6 @@
 import torch
 import torch.nn as nn
 
-class Block(nn.Module):
-  def __init__(self, in_channels ,out_channels ,repeat , bn_momentum):    # (3,64,2,0.1)
-    super(Block, self).__init__()
-    layers = []
-    for i in range(repeat):
-      if (i == 0) : 
-        layers.append(nn.Conv2d(in_channels , out_channels , kernel_size = 3, padding = 1, stride = 1))
-      else : 
-        layers.append(nn.Conv2d(out_channels , out_channels , kernel_size = 3, padding = 1, stride = 1))
-      layers.append(nn.BatchNorm2d(out_channels , momentum=bn_momentum))
-      layers.append(nn.ReLU(True))
-
-    layers.append(nn.MaxPool2d(kernel_size= 2, stride = 2))
-    self.net = nn.Sequential(*layers)
-
-  def forward(self,x):
-    x = self.net(x)
-    return 
-
 class FCN(nn.Module):
     def __init__(self, num_classes, drop_r, bn_momentum , resolution):
         super(FCN , self).__init__()
