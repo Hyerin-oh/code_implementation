@@ -4,22 +4,16 @@ import torch.nn as nn
 class Block(nn.Module):
   def __init__(self, in_channels ,out_channels ,repeat , bn_momentum):    # (3,64,2,0.1)
     super(Block, self).__init__()
-    conv_in = nn.Conv2d(in_channels , out_channels , kernel_size = 3, padding = 1, stride = 1)
-    conv_out = nn.Conv2d(out_channels , out_channels , kernel_size = 3, padding = 1, stride = 1)
-    relu = nn.ReLU(True)
-    bn = nn.BatchNorm2d(out_channels , momentum=bn_momentum)
-    maxpool = nn.MaxPool2d(kernel_size= 2, stride = 2)
-
     layers = []
     for i in range(repeat):
       if (i == 0) : 
-        layers.append(conv_in)
+        layers.append(nn.Conv2d(in_channels , out_channels , kernel_size = 3, padding = 1, stride = 1))
       else : 
-        layers.append(conv_out)
-      layers.append(bn)
-      layers.append(relu)
+        layers.append(nn.Conv2d(out_channels , out_channels , kernel_size = 3, padding = 1, stride = 1))
+      layers.append(nn.BatchNorm2d(out_channels , momentum=bn_momentum))
+      layers.append(nn.ReLU(True))
 
-    layers.append(maxpool)
+    layers.append(nn.MaxPool2d(kernel_size= 2, stride = 2))
     self.net = nn.Sequential(*layers)
 
   def forward(self,x):
@@ -56,13 +50,14 @@ class FCN(nn.Module):
 
         # fcn-16
         self.pool4_conv = nn.Conv2d(512 , num_classes , kernel_size = 1 , stride = 1 , padding = 0)
-        self.upsample_double = nn.ConvTranspose2d(num_classes , num_classes , kernel_size = 4 , stride = 2 , padding = 1)
         self.upsample16 = nn.ConvTranspose2d(num_classes , num_classes , kernel_size = 32 , stride = 16 , padding = 8)
 
         #fcn-8
         self.pool3_conv = nn.Conv2d(256 , num_classes , kernel_size = 1 , stride = 1 , padding = 0)
         self.upsample8 = nn.ConvTranspose2d(num_classes , num_classes , kernel_size = 16 , stride = 8 , padding = 4)
-         
+        
+        # fcn-16 & fcn-8
+        self.upsample_double = nn.ConvTranspose2d(num_classes , num_classes , kernel_size = 4 , stride = 2 , padding = 1)
 
 
     def forward(self, x):
