@@ -76,7 +76,6 @@ class FCN(nn.Module):
           layers.append(nn.Conv2d(in_channels , out_channels , kernel_size = 3, padding = 1, stride = 1))
         else : 
           layers.append(nn.Conv2d(out_channels , out_channels , kernel_size = 3, padding = 1, stride = 1))
-        layers.append(nn.BatchNorm2d(out_channels , momentum=bn_momentum))
         layers.append(nn.ReLU(True))
 
       layers.append(nn.MaxPool2d(kernel_size= 2, stride = 2))
